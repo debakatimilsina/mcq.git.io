@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Question Generator</title>
+    <style>
+        /* Basic styling for the MCQ options */
+        .option {
+            margin: 10px;
+            padding: 5px;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        /* Style for the numbered footnote link */
+        .footnote-link {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-left: 5px;
+            /* Add margin to separate the link from details */
+        }
+        /* Style for the footnote content (hidden by default) */
+        .footnote-content {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            font-size: smaller;
+            font-family: Calibri, sans-serif;
+        }
+        /* Style for details */
+        .details {
+            color: brown;
+            font-style: italic;
+            font-size: smaller;
+            font-family: Calibri, sans-serif;
+        }
+        /* Style for buttons */
+        .button-toggle {
+            background-color: blue;
+            /* Default background color */
+            color: white;
+            /* Default text color */
+        }
+        /* Style for buttons when active (clicked) */
+        .button-toggle.active {
+            background-color: green !important;
+            /* Background color when active */
+            color: white !important;
+            /* Text color when active */
+        }
+        textarea {
+            width: 80%;
+            max-width: 100%;
+            /* Ensure it doesn't exceed the viewport width */
+            box-sizing: border-box;
+            /* Include padding and border in the width calculation */
+        }
+        button {
+            background-color: yellow;
+        }
+        /* Style for the "Generated Code" output */
+        #generatedCode {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        /* Style for the LMN Output Container */
+        #lmnOutput {
+            text-align: left;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Model MCQ for 31th bar Exam</h1>
+    <!-- Question Container -->
+    <div id="questionContainer">
+        <!-- Questions and options will be dynamically added here -->
+    </div>
+    <!-- Check Answer Button -->
+    <button id="checkAnswerBtn" style="display: none;">Next Please</button><br><br>
+    <!-- Result Display -->
+    <p id="result"></p>
+    <!-- [
+    <button id="showButton" class="button-toggle" onclick="toggleColor(this)">Show ABC</button>
+    <button id="copyButton">Copy</button>
+    <button id="showLMN" class="button-toggle" onclick="toggleColor(this)">Show LMN</button>
+    <div id="output" style="display: none;">
+        <pre id="generatedCode"></pre>
+    </div>
+    <div id="lmnOutput">
+    </div>
+    ] -->
+    <script>
+        var currentQuestionIndex = 0;
+        var quizCompleted = false; // Variable to track quiz completion
+        var rightAnswers = 0; // Variable to track the number of right answers
+        var wrongAnswers = 0; // Variable to track the number of wrong answers
+        var mcqData = [
+      
+        {   id: "4",   question: "नेपालको नागरिक आमाबाट नेपालमा जन्म भई नेपालमा नै बसोबास गरेको व्यक्तिको बाबु विदेशी नागरिक भएमा त्यस्तो व्यक्तिले कुन प्रकारको नागरिकता पाउँदछ?",   options: ["वंशज", "अंगिकृत", "जन्मसिद्ध", "कुनै पनि प्रकारको नागरिकता पाउदैन"],   correctAnswer: "अंगिकृत",   details: "नेपालको कानुन अनुसार बाबु विदेशी भएमा वंशजको नागरिकता पाइँदैन। जन्मसिद्ध नागरिकता प्राप्तिको लागि संवैधानिक व्यवस्था छैन।",    footnote: "नेपालमा जन्मसिद्ध नागरिकता वंशज र अङ्गिकृत नगरिकता जस्तो नियमित रूपमा प्राप्त गर्न सकिंदैन। जन्मसिद्ध नगारिकता विशेष अवस्थामा सरकारले घोषणा गरेर वितरण गर्ने गर्दछ। जस्तैः २०६२/६३ को आन्दोलन पछि सरकारले निश्चित अवधि तोकेर जन्मसिद्ध नागरिक वितरण गरेको थियो।<br><br><b><u>Bonus:</u></b>नेपालले प्रदान गर्न सक्ने नागरिकताका प्रकार निम्न रहेका छन्ः<br>i. Citizenship by Descent[Jus Sanguis] (वंशज)<br>ii.Citizenship by Naturalization (अङ्गिकृत), <br>iii. Citizenship by Birth [Jus Soli](जन्मसिद्ध)<br>iv. Non-Residential Nepali Citizenship (गैर आवासिय नेपाली नागरिकता-धारा १४)<br>v. Honorary Citizenship (सम्मानार्थ नागरिकता -धारा ११(९))<br><br>See more here:<a href='https://www.nayapatrikadaily.com/news-details/123595/2023-09-06' target='_blank'>नागरिकता नियमावली पारित : एनआरएनलाई नागरिकता लिने बाटो खुला</a><br>"},
+
+        { id: "5", question: "तलका मध्ये कुन मौलिक हक नेपाली नागरिकका लागि मात्र प्रत्याभूत गरिएको होइन।", options: ["समानताको हक", "सूचनाको हक", "न्याय सम्बन्धी हक", "सम्पतिको हक"], correctAnswer: "न्याय सम्बन्धी हक", details: "न्याय सम्बन्धी हक विदेशी नागरिकले पनि प्रयोग गर्न पाउँछन् ", footnote: "हेर्नुहोस् संविधानको धारा १८, धारा २०, धारा २५ र धारा २७।  धारा १८, धारा २५ र धारा २७ मा <b> नागरिक </b> भन्ने शब्द प्रयोग गरिएको छ भने धारा २० मा <b>व्यक्ति </b> भन्ने शब्द प्रयोग भएको छ। 'व्यक्ति' शब्द प्रयोग  भएका कारण शाब्दिक व्याख्याको नियमानुसार यो हक सबै प्राकृतिक व्यक्ति (नेपाली नागरिक, गैर नेपाली नागरिक, अनागरिक) सबैले प्रयोग गर्न सक्छन्।"
+            },
+            {   id: "12",   question: "कुन विषयमा रिट क्षेत्राधिकार आकर्षित हुदैन",   options: ["मन्त्रिपरिषद्ले गरेको निर्णयमा", "न्याय परिषदले गरेको निर्णयमा", "प्रशासकीय निर्णयमा", "राजनीतिक प्रश्नमा"],   correctAnswer: "राजनीतिक प्रश्नमा",   details: "Doctrine of Political Question को सिद्धान्त अनुसार अदालतले राजनीति प्रश्नमा निर्णय दिन मिल्दैन",    footnote: "राजनीतिक प्रश्न र कानूनी प्रश्न मिसिएका विवादहरू अदालतमा दर्ता भएको खण्डमा भने अदालतले कानूनी प्रश्नलाई राजनीतिक प्रश्नबाट अलग गराएर निरूपण गर्न भने सक्दछ। यदि अदालतले न्यायिक आत्मसंयम (Judicial Self-Restraint) गुमाएर राजनीतिक प्रश्न निरूपण गर्न उद्दत रह्यो भने यसलाई Judicial Overreach भनिन्छ।"},
+
+{   id: "13",   question: "उच्च अदालतले रिटमा गरेको अन्तिम आदेश उपर थप उपचारका लागि के उपाय अवलम्बन गर्न सकिन्छ ।",   options: ["सर्वोच्च अदालतमा पुनरावलोकनको निवेदन दिन सकिन्छ", "सर्वोच्च अदालतमा दो.पा को निवेदन दिन सकिन्छ", "सोही अदालतमा पुनरावलोकनको निवेदन दिन सकिन्छ", "सर्वोच्च अदालतमा पुनरावेदन दिन सकिन्छ"],   correctAnswer: "सर्वोच्च अदालतमा दो.पा को निवेदन दिन सकिन्छ",   details: "उच्च अदालतले रिटमा गरेको अन्तिम आदेश उपर सर्वोच्च अदालतमा पुनरावेदन नलाग्ने भनी नजिर सिद्धान्त प्रतिपादन भएको छ।",    footnote: "न्याय प्रशासन ऐन, २०४८ बमोजिम पुनरावेदन अदालतले रिटमा गरेको अन्तिम आदेश उपर सर्वोच्च अदालतमा पुनरावेदन लाग्ने गर्दथ्यो। तर न्याय प्रशासन ऐन, २०७३ पश्चात दोहोर्‍याई पाउँ भन्ने निवेदन दिन सकिन्छ तर पुनरावेदन गर्न भने मिल्दैन।  सर्वोच्च अदालतम बाहेक कुनै पनि अदालतलाई आफूले गरेको फैसलाको पुनरावलोकन गर्ने क्षेत्राधिकार छैन। अतः सोहि अदालतमा पुनरावलोकनको निवेदन दिन पनि सकिंदैन।<br> थप ज्ञानको लागि हेर्नुहोस्ः<a href='https://supremecourt.gov.np/web/assets/downloads/aadesa_20731109.pdf' target='_blank'>स.अ.को पूर्ण इजलासबाट भएको आदेश</a><br>"},
+
+{   id: "14",   question: "कानूनको न्यायिक पुनरावलोकन भित्र तलको कुन विषय पर्दैन।",   options: [" सबै पर्दछन्", "विधायिकी कानून उपरको न्यायिक पुनरावलोकन", "संविधान संशोधन उपरको न्यायिक पुनरावलोकन", "अध्यादेश उपरको न्यायिक पुनरावलोकन"],   correctAnswer: " सबै पर्दछन्",   details: "नेपालमा संसदमा विचाराधिन रहेको विधेयक (Bill) को न्यायिक पुनरावलोकन हुँदैन तर कानून र कानून सरहका दस्तावेजको न्यायिक पुनरावलोकन हुन्छ।",    footnote: "Judicial Review of Legislation is known as the Brain Child of Judiciary (न्यायलयको मानसपुत्र) as doctrine of judicial review of legislation was propounded by US Supreme Court in Marbury V. Madision Case in (1803) and got enough recognition thereafter. त्यसैले नेपालको संविधानमा न्यायिक पुनरावलोकन(Judicial Review) को शब्दावलीको प्रत्यक्ष रूपमा प्रयोग नगरिएतापनि संविधानको धारा १३३(१) बमोजिमको सर्वोच्च अदालतको असाधारण क्षेत्राधिकार Judicial Review of Legislation कै spirit मा रहेको छ।"},
+
+{   id: "15",   question: "Nullum crimen sine lege भन्ने उक्तिले के जनाउँदछ?",   options: ["फौजदारी कारवाहीमा सुनुवाईको मौका दिनु पर्दछ", "जसले अपराध गरेको छ त्यसलाई मात्र सजायँ गर्नु पर्दछ", "प्रमाण विना कसैलाई पनि फौजदरी मुद्दमा दोषी ठहर गर्न हुँदैन", "कानूनले अपराध घोषित नगरेको कुरामा सजायँ गर्नु हुँदैन"],   correctAnswer: "कानूनले अपराध घोषित नगरेको कुरामा सजायँ गर्नु हुँदैन",   details: "Nullum=No, Crimen=Crime, Sine=Without, lege=law <br> Therefore, the phrase indicates No Crime without Law",    footnote: "Nullum crimen sine lege कै सिद्धान्तका आधारमा Match fixing मा (राजद्रोहको) आरोप लागेका खेलाडीलाई कानूनले अपराधीकरण नगरेको कसूरमा सजाय गर्न नमिल्ने भनी अदलातले खेलाडीलाई सफाई दिएको थियो। पछि मुलुकी अपराध संहितामा Match fixing लाई Criminalize गरियो।"},
+
+{   id: "16",   question: "जन्मकैदको सजायँ पाएको व्यक्तिले कति अवधि कारागारमा व्यतिति गर्नु पर्दछ?",   options: ["पच्चीस वर्ष", "चालिस वर्ष", "जीवनभार", "बीस वर्ष"],   correctAnswer: "पच्चीस वर्ष",   details: "हेर्नुहोस् मु.अ.स., २०७४ को दफा ४२",    footnote: "४२. जन्म कैदको गणनाः दफा ४१ मा उल्लिखित अवस्थामा बाहेक जन्म कैदको सजाय गणना गर्दा पच्चीस वर्र्ष कैद सजाय हुने गरी गणना गर्नु पर्नेछ।"},
+
+            {   id: "10",   question: "तलका मध्ये कुन निकाय संवैधानिक निकाय होइन",   options: ["महान्यायाधिवक्ता", "राष्ट्रिय प्राकृतिक स्रोत तथा वित्त आयोग", "मधेशी आयोग", "लोक सेवा आयोग"],   correctAnswer: "महान्यायाधिवक्ता",   details: "हेर्नुहोस् नेपालको संविधनाको धारा ३०६(१)(ठ)",    footnote: "नेपालको संविधान २०४७ र नेपालको अन्तरिम संविधान, २०६३ ले महान्यायाधिवक्तालाई संवैधानिक निकाय अन्तरगत राखेको थियो तर नेपालको संविधानले महान्यायाधिवक्तालाई भने संवैधानिक निकाय अन्तरगत राखेको छैन। <br>धारा ३०६(१)(ठ):“संवैधानिक निकाय” भन्नाले यस संविधान बमोजिम गठन गरिएका अख्तियार दुरुपयोग अनुसन्धान आयोग, महालेखा परीक्षक, लोकसेवा आयोग, निर्वाचन आयोग, राष्ट्रिय मानव अधिकार आयोग, राष्ट्रिय प्राकृतिक स्रोत तथा वित्त आयोग, राष्ट्रिय महिला आयोग, राष्ट्रिय दलित आयोग, राष्ट्रिय समावेशी आयोग, आदिवासी जनजाति आयोग, मधेशी आयोग, थारू आयोग र मुस्लिम आयोग सम्झनु पर्छ।"},
+                     // Add more questions and answers here with details and footnotes
+        ];
+        // Shuffle function to randomize array elements
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        // Shuffle the MCQ data array and options
+        shuffleArray(mcqData);
+        mcqData.forEach(mcq => shuffleArray(mcq.options));
+        // Array to store user's selected answers
+        var userAnswers = [];
+        // Function to display questions and options
+        function displayQuestion() {
+            if (currentQuestionIndex < mcqData.length) {
+                var questionContainer = document.getElementById("questionContainer");
+                questionContainer.innerHTML = "";
+                var mcq = mcqData[currentQuestionIndex];
+                var questionDiv = document.createElement("div");
+                questionDiv.innerHTML = "<p>" + (currentQuestionIndex + 1) + ". " + mcq.question + "</p>";
+                mcq.options.forEach(function (option, i) {
+                    var optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerHTML = '<input type="radio" name="q' + currentQuestionIndex + '" value="' + option + '"> ' + option;
+                    questionDiv.appendChild(optionDiv);
+                });
+                questionContainer.appendChild(questionDiv);
+                currentQuestionIndex++;
+                document.getElementById("checkAnswerBtn").style.display = "block"; // Show the "Check Answer" button
+            }
+            else {
+                // All questions have been answered
+                quizCompleted = true;
+                document.getElementById("checkAnswerBtn").innerText = "Show Answers";
+            }
+        }
+       // Function to check the answers
+function checkAnswers() {
+    var selectedOption = document.querySelector('input[name="q' + (currentQuestionIndex - 1) + '"]:checked');
+    if (selectedOption) {
+        var optionDiv = selectedOption.parentElement;
+        var mcq = mcqData[currentQuestionIndex - 1];
+        var userAnswer = selectedOption.value;
+        userAnswers.push({ question: mcq.question, userAnswer });
+        if (userAnswer === mcq.correctAnswer) {
+            optionDiv.classList.add("correct");
+            rightAnswers++; // Increment the count of right answers
+        } else {
+            optionDiv.classList.add("wrong");
+            wrongAnswers++; // Increment the count of wrong answers
+        }
+        displayQuestion(); // Display the next question or show answers
+    }
+}
+
+        // Display the first question on page load
+        displayQuestion();
+        // Add event listener for option selection
+        var checkAnswerBtn = document.getElementById("checkAnswerBtn");
+        checkAnswerBtn.addEventListener("click", function () {
+            if (quizCompleted) {
+                // Show all answers, including user's wrong answers and footnotes
+                showAllAnswers();
+            } else {
+                checkAnswers();
+            }
+        });
+        // Function to show all answers
+        function showAllAnswers() {
+            var questionContainer = document.getElementById("questionContainer");
+            questionContainer.innerHTML = ""; // Clear the question container
+            var activeFootnoteIndex = -1; // Variable to track the active footnote
+            mcqData.forEach(function (mcq, index) {
+                var questionDiv = document.createElement("div");
+                questionDiv.innerHTML = "<p>" + (index + 1) + ". " + mcq.question + "</p>";
+                mcq.options.forEach(function (option, i) {
+                    var optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerHTML = option;
+                    if (option === mcq.correctAnswer) {
+                        optionDiv.classList.add("correct");
+                    } else {
+                        // Check if the user selected this option and it's not correct
+                        var userAnswer = userAnswers.find(answer => answer.question === mcq.question);
+                        if (userAnswer && userAnswer.userAnswer === option) {
+                            optionDiv.classList.add("wrong");
+                        }
+                    }
+                    questionDiv.appendChild(optionDiv);
+                });
+                // Display the details along with the question and answer
+                var detailsDiv = document.createElement("div");
+                detailsDiv.className = "details";
+                detailsDiv.innerHTML = "<p><b>Details:</b> " + mcq.details;
+                // Display the numbered footnote link in line with details
+                var footnoteLink = document.createElement("a");
+                footnoteLink.className = "footnote-link";
+                footnoteLink.innerText = "[" + "Click Here for More Details" + "]";
+                detailsDiv.appendChild(footnoteLink);
+                // Display the footnote content
+                var footnoteContent = document.createElement("div");
+                footnoteContent.className = "footnote-content";
+                footnoteContent.id = "footnote-" + index;
+                footnoteContent.innerHTML = "<p class='footnote'><b>Footnote:</b> " + mcq.footnote + "</p>";
+                footnoteLink.addEventListener("click", function () {
+                    // Toggle the visibility of the footnote content when the link is clicked
+                    var footnoteContent = document.getElementById("footnote-" + index);
+                    if (footnoteContent.style.display === "block") {
+                        footnoteContent.style.display = "none";
+                    } else {
+                        if (activeFootnoteIndex !== -1) {
+                            // Hide the previously active footnote
+                            document.getElementById("footnote-" + activeFootnoteIndex).style.display = "none";
+                        }
+                        footnoteContent.style.display = "block";
+                        activeFootnoteIndex = index; // Update the active footnote index
+                    }
+                });
+                questionContainer.appendChild(questionDiv);
+                questionContainer.appendChild(detailsDiv);
+                questionContainer.appendChild(footnoteContent);
+            });
+            document.getElementById("checkAnswerBtn").style.display = "none"; // Hide the "Check Answer" button
+            // Display the user's score in a pop-up window
+            var scorePopup = window.open("", "Score", "width=400,height=200");
+            scorePopup.document.write("<h2>Your Score</h2>");
+            scorePopup.document.write("<p>Number of Right Answers: " + rightAnswers + "</p>");
+            scorePopup.document.write("<p>Number of Wrong Answers: " + wrongAnswers + "</p>");
+            scorePopup.document.write("<p>वृहत तयारीको लागि:अधिवक्तामृत (soft file) '<a href='https://debakatimilsina.github.io/syllablesforbarexam.git.io/'' target='_blank'>यहाँ थिच्नुहोस्</a>'</p>");
+            scorePopup.document.close();
+        }
+     
+      
+    </script>
+  
+    <!-- [
+    <h3>Input Fields</h3>
+    <label for="id">ID:</label>
+    <textarea id="id" placeholder="Enter ID" onkeyup="autoPopulateFields()"></textarea><br><br>
+    <button id="saveStateButton" onclick="saveInputFieldState()">Save State</button><br>
+    <label for="question">Question:</label>
+    <textarea id="question" placeholder="Enter question text"></textarea><br><br>
+    <label for="options">Options:</label>
+    <textarea id="options" placeholder="Option 1, Option 2, Option 3, Option 4"></textarea><br><br>
+    <label for="correctAnswer">Correct Answer:</label>
+    <textarea id="correctAnswer" placeholder="Enter correct answer"></textarea><br><br>
+    <label for="details">Details:</label>
+    <textarea id="details" placeholder="Enter details"></textarea><br><br>
+    <label for="footnote">Footnote:</label>
+    <textarea id="footnote" placeholder="Enter footnote"></textarea><br><br>
+
+    <button id="loadStateButton" onclick="loadInputFieldState()">Load State</button>
+   
+    <script>
+        // Function to save input field states to local storage
+        function saveInputFieldState() {
+            var id = document.getElementById("id").value;
+            var question = document.getElementById("question").value;
+            var options = document.getElementById("options").value;
+            var correctAnswer = document.getElementById("correctAnswer").value;
+            var details = document.getElementById("details").value;
+            var footnote = document.getElementById("footnote").value;
+            var inputFieldState = {
+                id: id,
+                question: question,
+                options: options,
+                correctAnswer: correctAnswer,
+                details: details,
+                footnote: footnote
+            };
+            localStorage.setItem("inputFieldState", JSON.stringify(inputFieldState));
+            alert("Input field state has been saved!");
+        }
+        // Function to load input field states from local storage
+        function loadInputFieldState() {
+            var inputFieldState = JSON.parse(localStorage.getItem("inputFieldState"));
+            if (inputFieldState) {
+                document.getElementById("id").value = inputFieldState.id;
+                document.getElementById("question").value = inputFieldState.question;
+                document.getElementById("options").value = inputFieldState.options;
+                document.getElementById("correctAnswer").value = inputFieldState.correctAnswer;
+                document.getElementById("details").value = inputFieldState.details;
+                document.getElementById("footnote").value = inputFieldState.footnote;
+                alert("Input field state has been loaded!");
+            } else {
+                alert("No saved input field state found.");
+            }
+        }
+        // Function to copy text from a DOM element to the clipboard
+        function copyTextToClipboard() {
+            const generatedCode = document.getElementById("generatedCode");
+            const textArea = document.createElement("textarea");
+            textArea.value = generatedCode.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+        }
+        // Add an event listener to the "COPY" button
+        const copyButton = document.getElementById("copyButton");
+        copyButton.addEventListener("click", function () {
+            copyTextToClipboard();
+            alert("Code has been copied to the clipboard!");
+        });
+        // Show the "COPY" button when the code is generated
+        const output = document.getElementById("output");
+        const generatedCode = document.getElementById("generatedCode");
+        generatedCode.addEventListener("input", function () {
+            copyButton.style.display = "block";
+        });
+        //auto-populating fields   
+        function autoPopulateFields() {
+            var id = document.getElementById("id").value;
+            var matchingMcq = mcqData.find(function (mcq) { return mcq.id === id; });
+            if (matchingMcq) {
+                document.getElementById("question").value = matchingMcq.question;
+                document.getElementById("options").value = matchingMcq.options.join(", ");
+                document.getElementById("correctAnswer").value = matchingMcq.correctAnswer;
+                document.getElementById("details").value = matchingMcq.details;
+                document.getElementById("footnote").value = matchingMcq.footnote;
+            } else {
+                document.getElementById("question").value = "";
+                document.getElementById("options").value = "";
+                document.getElementById("correctAnswer").value = "";
+                document.getElementById("details").value = "";
+                document.getElementById("footnote").value = "";
+            }
+        }
+        document.getElementById("showButton").addEventListener("click", function () {
+            var id = document.getElementById("id").value;
+            var question = document.getElementById("question").value;
+            var options = document.getElementById("options").value.split(",").map(function (option) { return option.trim(); });
+            var correctAnswer = document.getElementById("correctAnswer").value;
+            var details = document.getElementById("details").value;
+            var footnote = document.getElementById("footnote").value;
+            var generatedCode = '{   id: "' + id + '",   question: "' + question + '",   options: [' + options.map(function (option) { return '"' + option + '"'; }).join(", ") + '],   correctAnswer: "' + correctAnswer + '",   details: "' + details + '",    footnote: "' + footnote + '"},';
+            document.getElementById("generatedCode").textContent = generatedCode;
+            var output = document.getElementById("output");
+            output.style.display = output.style.display === "none" ? "block" : "none";
+        });
+        // Auto-populate fields on page load if there is a matching ID
+        window.onload = autoPopulateFields;
+        //script for toggling the color of button
+        function toggleColor(button) {
+            button.classList.toggle("active"); // Toggle the "active" class on button click
+        }
+
+          // LMN Button Click Event
+          var showLMNButton = document.getElementById("showLMN");
+        showLMNButton.addEventListener("click", function () {
+            var lmnOutput = document.getElementById("lmnOutput");
+            lmnOutput.style.display = lmnOutput.style.display === "none" ? "block" : "none";
+            generateLMNOutput(); // Generate and display LMN output
+        });
+        // Function to generate and display LMN output
+        function generateLMNOutput() {
+            var id = document.getElementById("id").value;
+            var question = document.getElementById("question").value;
+            var options = document.getElementById("options").value.split(",").map(option => option.trim());
+            var correctAnswer = document.getElementById("correctAnswer").value;
+            var details = document.getElementById("details").value;
+            var footnote = document.getElementById("footnote").value;
+            var lmnOutputDiv = document.getElementById("lmnOutput");
+            lmnOutputDiv.innerHTML = "";
+            var lmnOutputText = document.createElement("pre");
+            lmnOutputText.innerText = "ID: " + id + "\n" +
+                "1. " + question + "\n\n" +
+                options.map(function (option, index) { return (index + 1) + ". " + option; }).join("\n") + "\n\n" +
+                "Correct answer: " + correctAnswer + "\n" +
+                "Details: " + details + "\n\n" +
+                "[1]\n" +
+                "Footnote: " + footnote;
+            lmnOutputDiv.appendChild(lmnOutputText);
+        }
+
+        //Keyboard short cuts
+        function addLineBreak(event) {
+            if (event.key === "Enter" && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<br>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 4, cursorPosition + 4);
+            }
+            if ((event.key === "b" || event.key === "ब") && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<b>" +
+                    "</b>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 3, cursorPosition + 3);
+            }
+            if ((event.key === "u" || event.key === "ु") && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<u>" +
+                    "</u>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 3, cursorPosition + 3);
+            }
+            if ((event.key === "s" || event.key === "स") && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<span id=''>" +
+                    "</span>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 3, cursorPosition + 3);
+            }
+            if ((event.key === "d" || event.key === "द") && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<div class=''>" +
+                    "</div>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 11, cursorPosition + 11);
+            }
+            if (event.key === "l" && event.ctrlKey) {
+                event.preventDefault();
+                var input = event.target;
+                var cursorPosition = input.selectionStart;
+                var currentValue = input.value;
+                var newValue =
+                    currentValue.substring(0, cursorPosition) +
+                    "<a href='' target='_blank'></a><br>" +
+                    currentValue.substring(cursorPosition);
+                input.value = newValue;
+                input.setSelectionRange(cursorPosition + 9, cursorPosition + 9);
+            }
+        }
+        var inputFields = document.querySelectorAll("input, textarea");
+        inputFields.forEach(function (input) {
+            input.addEventListener("keydown", addLineBreak);
+        });
+
+    </script>
+    ] -->
+</body>
+</html>
